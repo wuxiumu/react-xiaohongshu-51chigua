@@ -13,7 +13,13 @@
       "WebFetch(domain:simpleicons.org)",
       "WebFetch(domain:icones.js.org)",
       "Bash(node *)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(npx react-scripts *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npx eslint *)",
+      "Bash(curl -s http://localhost:3000/php-api/get_posts.php)",
+      "Bash(xargs kill -9)",
+      "Bash(npm start *)"
     ]
   }
 }

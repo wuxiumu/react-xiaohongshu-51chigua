@@ -7,6 +7,14 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 require_once 'helper.php';
 require_once 'admin_auth.php';
 
+// 解析 PUT 请求的表单数据
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    parse_str(file_get_contents('php://input'), $_PUT);
+    foreach ($_PUT as $key => $value) {
+        $_POST[$key] = $value;
+    }
+}
+
 // 处理预检请求
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -40,43 +48,63 @@ switch ($method) {
 }
 
 /**
- * 获取所有评论
+ * 获取所有评论（带分页）
  */
 function getAllComments() {
     $postId = $_GET['post_id'] ?? '';
     $commentsDir = getDataPath() . 'comments/';
-    
+
     if (!is_dir($commentsDir)) {
-        echo json_encode(['code'=>0, 'list'=>[]], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['code'=>0, 'list'=>[], 'total'=>0, 'page'=>1, 'page_size'=>20, 'total_pages'=>1], JSON_UNESCAPED_UNICODE);
         return;
     }
-    
+
     $allComments = [];
     $files = glob($commentsDir . 'cmt_*.json');
-    
+
     foreach ($files as $file) {
         // 提取 post_id
         preg_match('/cmt_(.+?)\.json$/', basename($file), $matches);
         $pid = $matches[1] ?? '';
-        
+
         if (!empty($postId) && $postId !== $pid) {
             continue;
         }
-        
+
         $comments = json_decode(file_get_contents($file), true) ?: [];
-        
+
         foreach ($comments as $comment) {
             $comment['post_id'] = $pid;
             $allComments[] = $comment;
         }
     }
-    
+
     // 按时间排序
     usort($allComments, function($a, $b) {
         return strtotime($b['time']) - strtotime($a['time']);
     });
-    
-    echo json_encode(['code'=>0, 'list'=>$allComments], JSON_UNESCAPED_UNICODE);
+
+    // 分页参数
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    $pageSize = isset($_GET['page_size']) ? intval($_GET['page_size']) : 20;
+
+    if ($page < 1) $page = 1;
+    if ($pageSize < 1) $pageSize = 20;
+    if ($pageSize > 100) $pageSize = 100;
+
+    $total = count($allComments);
+    $totalPages = ceil($total / $pageSize);
+    $offset = ($page - 1) * $pageSize;
+    $list = array_slice($allComments, $offset, $pageSize);
+
+    echo json_encode([
+        'code' => 0,
+        'list' => $list,
+        'total' => $total,
+        'page' => $page,
+        'page_size' => $pageSize,
+        'total_pages' => max(1, $totalPages)
+    ], JSON_UNESCAPED_UNICODE);
 }
 
 /**

@@ -17,19 +17,7 @@ if ($offset < 0) {
     $offset = 0;
 }
 
-$imgList = getImgList();
-$posts = [];
-
-foreach($imgList as $idx => $img) {
-    $fixedId = md5($img);
-    $posts[] = [
-        'id' => $fixedId,
-        'img' => $img,
-        'title' => '吃瓜美女图集'.($idx+1),
-        'desc' => '高清美女吃瓜日常点评',
-        'create_time' => date('Y-m-d H:i:s', filemtime(dirname(__DIR__) . '/' . $img))
-    ];
-}
+$posts = getPostsList();
 
 // Filter out excluded post
 if (!empty($exclude_id)) {

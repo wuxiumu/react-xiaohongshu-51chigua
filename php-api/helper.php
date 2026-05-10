@@ -56,7 +56,7 @@ function getImgList() {
  * @return string 唯一ID
  */
 function genId(){
-    return date('YmdHis') . mt_rand(100, 999);
+    return uniqid('', true) . mt_rand(100, 999);
 }
 
 /**
@@ -159,4 +159,80 @@ function filterInput($str) {
     $str = trim($str);
     $str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
     return $str;
+}
+
+/**
+ * 加载用户发布的帖子元数据
+ * @return array 元数据索引 [img_path => post_meta]
+ */
+function loadUserPostsMeta() {
+    $postsDir = getDataPath() . 'posts/';
+    $meta = [];
+
+    if (!is_dir($postsDir)) {
+        return $meta;
+    }
+
+    foreach (scandir($postsDir) as $file) {
+        if (strpos($file, 'user_') === 0 && substr($file, -5) === '.json') {
+            $filePath = $postsDir . $file;
+            $data = json_decode(file_get_contents($filePath), true);
+            if ($data && isset($data['img'])) {
+                $meta[$data['img']] = $data;
+            }
+        }
+    }
+
+    return $meta;
+}
+
+/**
+ * 获取图片列表（附带元数据，按创建时间倒序）
+ * @return array 帖子列表
+ */
+function getPostsList() {
+    $imgList = getImgList();
+    $userMeta = loadUserPostsMeta();
+    $posts = [];
+
+    foreach ($imgList as $img) {
+        $fixedId = md5($img);
+
+        // 如果有用户元数据，优先使用
+        if (isset($userMeta[$img])) {
+            $post = $userMeta[$img];
+            // 确保必要字段存在
+            $post['id'] = $post['id'] ?? $fixedId;
+            $post['img'] = $post['img'] ?? $img;
+            $post['title'] = $post['title'] ?? '未命名图片';
+            $post['desc'] = $post['desc'] ?? '';
+            $post['username'] = $post['username'] ?? '匿名用户';
+            $post['create_time'] = $post['create_time'] ?? date('Y-m-d H:i:s', filemtime(dirname(__DIR__) . '/' . $img));
+        } else {
+            // 默认帖子的元数据
+            $mtime = filemtime(dirname(__DIR__) . '/' . $img);
+            // 用文件名序号做标题编号（1.jpeg -> 第1张）
+            $basename = basename($img, '.' . pathinfo($img, PATHINFO_EXTENSION));
+            $num = intval($basename);
+            $num = $num > 0 ? $num : (count($posts) + 1);
+
+            $post = [
+                'id' => $fixedId,
+                'img' => $img,
+                'title' => '吃瓜美女图集 #' . $num,
+                'desc' => '高清美女吃瓜日常点评',
+                'username' => '管理员',
+                'create_time' => date('Y-m-d H:i:s', $mtime)
+            ];
+        }
+
+        $posts[] = $post;
+    }
+
+    // 按创建时间倒序排序
+    usort($posts, function($a, $b) {
+        return strtotime($b['create_time']) - strtotime($a['create_time']);
+    });
+
+    return $posts;
 }

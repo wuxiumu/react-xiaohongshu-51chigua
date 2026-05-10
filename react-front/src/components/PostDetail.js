@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import './PostDetail.css';
 import { getPosts, getCommentList, addComment, getRandomNickname, likePost, sharePost, getRandomPosts } from '../api';
 import ShareModal from './ShareModal';
@@ -23,6 +24,7 @@ function PostDetail() {
   const [generatingNickname, setGeneratingNickname] = useState(false);
   const [postStats, setPostStats] = useState({ likeCount: 0, shareCount: 0, isLiked: false });
   const [expandedComments, setExpandedComments] = useState(new Set());
+  const [expandedContent, setExpandedContent] = useState({});
   const [showShareModal, setShowShareModal] = useState(false);
   const [recommendedPosts, setRecommendedPosts] = useState([]);
   const [recommendLoading, setRecommendLoading] = useState(false);
@@ -230,6 +232,13 @@ function PostDetail() {
     });
   };
 
+  const toggleExpandContent = (commentId) => {
+    setExpandedContent(prev => ({
+      ...prev,
+      [commentId]: !prev[commentId]
+    }));
+  };
+
   const handleLike = async () => {
     try {
       const action = postStats.isLiked ? 'unlike' : 'like';
@@ -284,11 +293,21 @@ function PostDetail() {
           {comment.reply_to && level > 1 && (
             <span className="reply-to-user">回复 <span className="reply-target">@{comment.reply_to}</span>：</span>
           )}
-          <p className="comment-content">{comment.content}</p>
+          <div className={`comment-content ${!expandedContent[comment.id] ? 'comment-collapsed' : ''}`}>
+            <ReactMarkdown>{comment.content}</ReactMarkdown>
+          </div>
+          {comment.content.length > 100 && (
+            <button
+              className="expand-content-btn"
+              onClick={() => toggleExpandContent(comment.id)}
+            >
+              {expandedContent[comment.id] ? '收起' : '展开'}
+            </button>
+          )}
         </div>
-        
+
         <div className="comment-actions">
-          <button 
+          <button
             className={`action-btn-small ${isReplying ? 'active' : ''}`}
             onClick={() => isReplying ? cancelReply() : handleReply(comment, parentComment)}
           >
@@ -380,8 +399,11 @@ function PostDetail() {
           />
           <div className="detail-info">
             <h1 className="detail-image-title">{post.title}</h1>
-            <p className="detail-desc">{post.desc}</p>
-            <span className="detail-time">发布时间: {post.create_time}</span>
+            <div className="detail-desc"><ReactMarkdown>{post.desc}</ReactMarkdown></div>
+            <div className="detail-meta">
+              <span className="detail-author">{post.username || '管理员'}</span>
+              <span className="detail-time">发布时间: {post.create_time}</span>
+            </div>
             
             <div className="detail-actions">
               <button 
@@ -438,29 +460,32 @@ function PostDetail() {
                 </button>
               )}
             </div>
-            
+
             {replyTo && (
               <div className="replying-to">
                 <span>回复 <strong>@{replyTo.username}</strong></span>
                 <button className="cancel-reply-btn" onClick={cancelReply}>×</button>
               </div>
             )}
-            
+
             <div className="comment-input-wrapper">
               <textarea
-                placeholder={replyTo ? `回复 @${replyTo.username}：` : "写下你的评论..."}
+                placeholder={replyTo ? `回复 @${replyTo.username}：` : "写下你的评论... 支持 **加粗**、`代码`、[链接](url) 等 Markdown 格式"}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 className="comment-textarea"
                 rows={3}
               />
-              <button 
-                onClick={handleSubmitComment}
-                disabled={!commentText.trim() || submitting}
-                className="submit-btn"
-              >
-                {submitting ? '发送中...' : '发送'}
-              </button>
+              <div className="comment-input-bar">
+                <span className="comment-hint">友善评论，理性发言</span>
+                <button
+                  onClick={handleSubmitComment}
+                  disabled={!commentText.trim() || submitting}
+                  className={`submit-btn ${commentText.trim() ? 'active' : ''}`}
+                >
+                  {submitting ? '发送中...' : '发送'}
+                </button>
+              </div>
             </div>
           </div>
 

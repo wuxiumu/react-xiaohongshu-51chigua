@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 根据环境判断使用哪个地址
 const isDev = process.env.NODE_ENV === 'development';
-const baseUrl = isDev 
-  ? 'http://localhost:8000/php-api'  // 开发环境
-  : '/php-api';                      // 生产环境 - 使用相对路径
+const baseUrl = isDev
+  ? '/php-api'                        // 开发环境 - 通过 proxy 代理
+  : '/php-api';                       // 生产环境 - 使用相对路径
 
 // 创建 axios 实例
 const apiClient = axios.create({
@@ -15,22 +15,10 @@ const apiClient = axios.create({
   }
 });
 
-// 获取管理员 Token
-const getAdminToken = () => localStorage.getItem('admin_token');
-
-// 创建带认证头的 axios 实例（用于管理接口）
-const adminClient = axios.create({
-  baseURL: baseUrl,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// 添加请求拦截器，自动附加 token
-adminClient.interceptors.request.use(
+// 自动附加 token（如果存在）
+apiClient.interceptors.request.use(
   (config) => {
-    const token = getAdminToken();
+    const token = localStorage.getItem('admin_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -103,6 +91,12 @@ export const getPostStats = (post_id) => apiClient.get('/get_post_stats.php', {p
 // 获取随机帖子（相关推荐）
 export const getRandomPosts = (params) => apiClient.get('/get_random_posts.php', { params });
 
+// 获取站点统计数据（首页 Banner）
+export const getSiteStats = () => apiClient.get('/get_stats.php');
+
+// 获取语录列表
+export const getYulu = () => apiClient.get('/get_yulu.php');
+
 // 发布帖子（带图片上传）
 export const publishPost = (formData) => {
   return apiClient.post('/publish_post.php', formData, {
@@ -128,7 +122,7 @@ export const adminLogin = (data) => {
 };
 
 // 获取所有帖子（管理）
-export const adminGetPosts = () => adminClient.get('/admin_posts.php');
+export const adminGetPosts = (params) => apiClient.get('/admin_posts.php', { params });
 
 // 更新帖子（管理）
 export const adminUpdatePost = (postId, data) => {
@@ -136,7 +130,7 @@ export const adminUpdatePost = (postId, data) => {
   Object.keys(data).forEach(key => {
     params.append(key, data[key]);
   });
-  return adminClient.put(`/admin_posts.php?id=${postId}`, params, {
+  return apiClient.put(`/admin_posts.php?id=${postId}`, params, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
@@ -145,20 +139,19 @@ export const adminUpdatePost = (postId, data) => {
 
 // 删除帖子（管理）
 export const adminDeletePost = (postId) => {
-  return adminClient.delete(`/admin_posts.php?id=${postId}`);
+  return apiClient.delete(`/admin_posts.php?id=${postId}`);
 };
 
 // 获取所有评论（管理）
-export const adminGetComments = (postId) => {
-  const params = postId ? { post_id: postId } : {};
-  return adminClient.get('/admin_comments.php', { params });
+export const adminGetComments = (params) => {
+  return apiClient.get('/admin_comments.php', { params });
 };
 
 // 更新评论（管理）
 export const adminUpdateComment = (postId, commentId, content) => {
   const params = new URLSearchParams();
   params.append('content', content);
-  return adminClient.put(`/admin_comments.php?post_id=${postId}&comment_id=${commentId}`, params, {
+  return apiClient.put(`/admin_comments.php?post_id=${postId}&comment_id=${commentId}`, params, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
@@ -167,7 +160,7 @@ export const adminUpdateComment = (postId, commentId, content) => {
 
 // 删除评论（管理）
 export const adminDeleteComment = (postId, commentId) => {
-  return adminClient.delete(`/admin_comments.php?post_id=${postId}&comment_id=${commentId}`);
+  return apiClient.delete(`/admin_comments.php?post_id=${postId}&comment_id=${commentId}`);
 };
 
 export default apiClient;
