@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
-=======
->>>>>>> fae4a92e0fc546b8d9f53bd62e2f9a48ea407c48
 .vscode/
+.claude/
 .idea/
 data/comments
 data/posts

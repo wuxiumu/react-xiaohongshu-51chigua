@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './WaterfallList.css';
-import { getPosts, likePost, sharePost, getPostStats } from '../api';
+import { getPosts, likePost, sharePost, getPostStats, getSiteStats, getYulu } from '../api';
 
 function WaterfallList() {
   const navigate = useNavigate();
@@ -11,7 +11,49 @@ function WaterfallList() {
   const [error, setError] = useState(null);
   const [postStats, setPostStats] = useState({});
   const [likedPosts, setLikedPosts] = useState(new Set());
-  const [activeTab, setActiveTab] = useState('all'); // all, hot, latest
+  const [activeTab, setActiveTab] = useState('all');
+  const [siteStats, setSiteStats] = useState({ posts: 0, comments: 0, totalUsers: 0, todayUsers: 0 });
+  const [displayStats, setDisplayStats] = useState({ posts: 0, comments: 0, totalUsers: 0, todayUsers: 0 });
+  const [allQuotes, setAllQuotes] = useState([]);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [typedText, setTypedText] = useState('');
+
+  // 获取所有语录
+  useEffect(() => {
+    getYulu().then(res => {
+      if (res.data.code === 0 && res.data.quotes.length > 0) {
+        setAllQuotes(res.data.quotes);
+      }
+    }).catch(err => console.error('获取语录失败:', err));
+  }, []);
+
+  // 打字效果 + 每10秒切换
+  useEffect(() => {
+    if (allQuotes.length === 0) return;
+
+    const currentQuote = allQuotes[quoteIndex % allQuotes.length];
+    setTypedText('');
+    let charIndex = 0;
+
+    // 打字动画
+    const typeTimer = setInterval(() => {
+      charIndex++;
+      setTypedText(currentQuote.slice(0, charIndex));
+      if (charIndex >= currentQuote.length) {
+        clearInterval(typeTimer);
+      }
+    }, 60);
+
+    // 10秒后切换下一条
+    const switchTimer = setTimeout(() => {
+      setQuoteIndex(prev => prev + 1);
+    }, 10000);
+
+    return () => {
+      clearInterval(typeTimer);
+      clearTimeout(switchTimer);
+    };
+  }, [allQuotes, quoteIndex]);
 
   // 根据路由设置默认tab
   useEffect(() => {
@@ -48,28 +90,76 @@ function WaterfallList() {
     }
   };
 
+  useEffect(() => {
+    fetchSiteStats();
+  }, []);
+
+  const fetchSiteStats = async () => {
+    try {
+      const response = await getSiteStats();
+      if (response.data.code === 0) {
+        setSiteStats({
+          posts: response.data.total_posts,
+          comments: response.data.total_comments,
+          totalUsers: response.data.total_users,
+          todayUsers: response.data.today_users
+        });
+      }
+    } catch (err) {
+      console.error('获取统计数据失败:', err);
+    }
+  };
+
+  // 数字滚动动画
+  useEffect(() => {
+    const targets = {
+      posts: siteStats.posts,
+      comments: siteStats.comments,
+      totalUsers: siteStats.totalUsers,
+      todayUsers: siteStats.todayUsers
+    };
+    const duration = 1200;
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayStats({
+        posts: Math.round(targets.posts * eased),
+        comments: Math.round(targets.comments * eased),
+        totalUsers: Math.round(targets.totalUsers * eased),
+        todayUsers: Math.round(targets.todayUsers * eased)
+      });
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [siteStats.posts, siteStats.comments, siteStats.totalUsers, siteStats.todayUsers]);
+
   const fetchAllPostStats = async () => {
     const stats = {};
     const liked = new Set();
-    
-    for (const post of posts.slice(0, 30)) { // 加载前30个的统计数据
-      try {
-        const response = await getPostStats(post.id);
-        if (response.data.code === 0) {
-          stats[post.id] = {
-            likeCount: response.data.like_count,
-            shareCount: response.data.share_count,
-            commentCount: response.data.comment_count
-          };
-          if (response.data.is_liked) {
-            liked.add(post.id);
-          }
+
+    const results = await Promise.allSettled(
+      posts.slice(0, 30).map(post => getPostStats(post.id))
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value.data.code === 0) {
+        const { post_id, like_count, share_count, comment_count, is_liked } = result.value.data;
+        stats[post_id] = {
+          likeCount: like_count,
+          shareCount: share_count,
+          commentCount: comment_count
+        };
+        if (is_liked) {
+          liked.add(post_id);
         }
-      } catch (err) {
-        console.error(`获取帖子${post.id}统计数据失败:`, err);
+      } else if (result.status === 'rejected') {
+        const post = posts.slice(0, 30)[index];
+        console.error(`获取帖子${post?.id}统计数据失败:`, result.reason);
       }
-    }
-    
+    });
+
     setPostStats(stats);
     setLikedPosts(liked);
   };
@@ -194,23 +284,45 @@ function WaterfallList() {
     <div className="page-wrapper">
       {/* 全宽 Banner */}
       <div className="hero-banner">
+        {/* 浮动粒子 */}
+        <div className="hero-particles">
+          <span className="particle p1" />
+          <span className="particle p2" />
+          <span className="particle p3" />
+          <span className="particle p4" />
+          <span className="particle p5" />
+          <span className="particle p6" />
+          <span className="particle p7" />
+          <span className="particle p8" />
+        </div>
         <div className="hero-content">
           <h1 className="hero-title">发现精彩美图</h1>
           <p className="hero-subtitle">浏览、点评、分享你的看法</p>
           <div className="hero-stats">
             <div className="stat-item">
-              <span className="stat-number">{posts.length}+</span>
+              <span className="stat-number">{displayStats.posts}</span>
               <span className="stat-label">精选图片</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">1.2k+</span>
+              <span className="stat-number">{displayStats.comments}</span>
               <span className="stat-label">精彩点评</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">500+</span>
-              <span className="stat-label">活跃用户</span>
+              <span className="stat-number">{displayStats.totalUsers}</span>
+              <span className="stat-label">总用户</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-number">{displayStats.todayUsers}</span>
+              <span className="stat-label">今日活跃</span>
             </div>
           </div>
+          {/* 每日语录 */}
+          {typedText && (
+            <div className="daily-quote">
+              <p className="quote-text">{typedText}</p>
+              <span className="typing-cursor">|</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -300,6 +412,7 @@ function WaterfallList() {
                   </div>
                   
                   <div className="card-footer">
+                    <span className="card-author">{post.username || '管理员'}</span>
                     <span className="card-time">{post.create_time.split(' ')[0]}</span>
                     <span className="card-index">#{index + 1}</span>
                   </div>
