@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <clipPath id="c">
+      <circle cx="32" cy="32" r="31"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <!-- 绿色瓜皮 -->
+    <circle cx="32" cy="32" r="31" fill="#4CAF50"/>
+    <!-- 红色瓜瓤 -->
+    <circle cx="32" cy="32" r="25" fill="#FF5252"/>
+    <!-- 黑色瓜子 -->
+    <ellipse cx="22" cy="24" rx="2" ry="3" fill="#333" transform="rotate(-20 22 24)"/>
+    <ellipse cx="42" cy="24" rx="2" ry="3" fill="#333" transform="rotate(20 42 24)"/>
+    <ellipse cx="32" cy="42" rx="2" ry="3" fill="#333"/>
+    <!-- 51 白色大字 -->
+    <text x="32" y="35" font-family="Arial Black,sans-serif" font-size="22" font-weight="900" fill="#FFF" text-anchor="middle">51</text>
+    <!-- 吃瓜 小字 -->
+    <text x="32" y="48" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="10" font-weight="bold" fill="#FFB6C1" text-anchor="middle">吃瓜</text>
+  </g>
+</svg>

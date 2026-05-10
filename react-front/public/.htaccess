@@ -1,0 +1,60 @@
+# Apache 重写规则
+# 用于支持 React Router 的前端路由
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # 如果请求的是实际存在的文件或目录，直接访问
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # API 请求重写到 php-api 目录
+    RewriteRule ^php-api/(.*)$ php-api/$1 [L]
+    
+    # data 目录直接访问
+    RewriteRule ^data/(.*)$ data/$1 [L]
+    
+    # 其他所有请求重定向到 index.html（React Router）
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# 开启 Gzip 压缩
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# 设置缓存
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType text/css "access plus 1 week"
+</IfModule>
+
+# PHP 设置
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+</IfModule>
+
+# 禁用目录浏览
+Options -Indexes
+
+# 设置默认字符集
+AddDefaultCharset UTF-8
+
+# 允许跨域（可选）
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+</IfModule>

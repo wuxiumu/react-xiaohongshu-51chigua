@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(PORT=3000 npx serve -s build -l 3000)",
+      "WebSearch",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/wechat.svg\" -o wechat.svg)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/sinaweibo.svg\" -o sinaweibo.svg)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/tencentqq.svg\" -o tencentqq.svg)",
+      "Bash(curl -sL --connect-timeout 10 --max-time 30 \"https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/wechat.svg\" -o /Users/mac/WebstormProjects/react-xiaohongshu-51chigua/react-front/src/icons/wechat.svg)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:simpleicons.org)",
+      "WebFetch(domain:icones.js.org)",
+      "Bash(node *)",
+      "Bash(npm uninstall *)"
+    ]
+  }
+}

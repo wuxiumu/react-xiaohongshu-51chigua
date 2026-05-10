@@ -1,0 +1,16 @@
+{
+  "short_name": "51吃瓜",
+  "name": "美女51吃瓜点评",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ff2442",
+  "background_color": "#ffffff",
+  "description": "美女51吃瓜点评社区，汇集最新热点事件点评、美女写真分享、网友真实热评。"
+}
