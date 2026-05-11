@@ -19,7 +19,9 @@
       "Bash(npx eslint *)",
       "Bash(curl -s http://localhost:3000/php-api/get_posts.php)",
       "Bash(xargs kill -9)",
-      "Bash(npm start *)"
+      "Bash(npm start *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'code={d[\\\\\"code\\\\\"]}, list_len={len\\(d[\\\\\"list\\\\\"]\\)}'\\)\")",
+      "Bash(curl -s http://localhost:3000/)"
     ]
   }
 }
