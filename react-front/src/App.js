@@ -4,6 +4,7 @@ import './App.css';
 import Navbar from './components/Navbar';
 import WaterfallList from './components/WaterfallList';
 import PostDetail from './components/PostDetail';
+import SearchResults from './components/SearchResults';
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './components/Admin/AdminDashboard';
 
@@ -17,6 +18,10 @@ function HotPage() {
 
 function PostPage() {
   return <PostDetail />;
+}
+
+function SearchPage() {
+  return <SearchResults />;
 }
 
 function App() {
@@ -41,6 +46,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/hot" element={<HotPage />} />
             <Route path="/post/:id" element={<PostPage />} />
+            <Route path="/search" element={<SearchPage />} />
             
             {/* 管理路由 */}
             <Route path="/admin" element={<AdminLogin />} />

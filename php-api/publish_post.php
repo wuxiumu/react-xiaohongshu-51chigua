@@ -14,6 +14,60 @@ header("Access-Control-Allow-Headers: Content-Type");
 require_once 'helper.php';
 require_once 'config.php';
 
+// 管理员邮箱
+$adminEmail = 'chigua517@outlook.com';
+
+// 发布限制配置
+define('MAX_TOTAL_POSTS', 200);        // 全站最多帖子数
+define('MAX_DAILY_POSTS_PER_IP', 2);  // 每个用户每天最多发布数
+
+// 获取客户端 IP
+$clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+// 确保 posts 目录存在
+$postsDir = dirname(__DIR__) . '/data/posts/';
+if (!is_dir($postsDir)) {
+    mkdir($postsDir, 0777, true);
+}
+
+// ---- 检查全站帖子总数限制 ----
+$imgDir = dirname(__DIR__) . '/data/img/';
+$totalPosts = 0;
+if (is_dir($imgDir)) {
+    $allFiles = array_diff(scandir($imgDir), ['.', '..']);
+    $totalPosts = count($allFiles);
+}
+
+if ($totalPosts >= MAX_TOTAL_POSTS) {
+    echo json_encode([
+        'code' => 1,
+        'msg' => '全站图片已达上限（' . MAX_TOTAL_POSTS . '条），暂时无法发布。请联系管理员：<a href="mailto:' . $adminEmail . '">' . $adminEmail . '</a>'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// ---- 检查每日每IP发帖限制 ----
+$dailyLogFile = $postsDir . 'daily_' . date('Ymd') . '.json';
+$dailyData = getJsonFile($dailyLogFile);
+
+// 统计当前 IP 今日发帖数
+$ipTodayPosts = 0;
+if (is_array($dailyData)) {
+    foreach ($dailyData as $entry) {
+        if (isset($entry['ip']) && $entry['ip'] === $clientIp) {
+            $ipTodayPosts++;
+        }
+    }
+}
+
+if ($ipTodayPosts >= MAX_DAILY_POSTS_PER_IP) {
+    echo json_encode([
+        'code' => 1,
+        'msg' => '您今天的发帖数已达上限（' . MAX_DAILY_POSTS_PER_IP . '条），请明天再试。如需更多请联系管理员：<a href="mailto:' . $adminEmail . '">' . $adminEmail . '</a>'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // 定义上传限制（15MB）
 define('UPLOAD_MAX_SIZE', 15 * 1024 * 1024);
 define('UPLOAD_ALLOWED_TYPES', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
@@ -90,15 +144,17 @@ $post = [
     'is_user_upload' => true
 ];
 
-// 确保 posts 目录存在
-$postsDir = dirname(__DIR__) . '/data/posts/';
-if (!is_dir($postsDir)) {
-    mkdir($postsDir, 0777, true);
-}
-
 // 保存到帖子文件
 $postFile = $postsDir . 'user_' . $postId . '.json';
 file_put_contents($postFile, json_encode($post, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
+
+// 记录今日发帖日志（用于限制检查）
+$dailyData[] = [
+    'ip' => $clientIp,
+    'post_id' => $postId,
+    'time' => date('Y-m-d H:i:s')
+];
+saveJsonFile($dailyLogFile, $dailyData);
 
 // 返回成功
 echo json_encode([

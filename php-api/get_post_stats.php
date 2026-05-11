@@ -39,6 +39,7 @@ $commentCount = count($comments);
 
 echo json_encode([
     'code'=>0,
+    'post_id'=>$postId,
     'like_count'=>$likeCount,
     'share_count'=>$shareCount,
     'comment_count'=>$commentCount,

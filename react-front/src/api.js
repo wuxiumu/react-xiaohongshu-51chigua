@@ -97,6 +97,9 @@ export const getSiteStats = () => apiClient.get('/get_stats.php');
 // 获取语录列表
 export const getYulu = () => apiClient.get('/get_yulu.php');
 
+// 获取热门关键词
+export const getHotKeywords = () => apiClient.get('/get_hot_keywords.php');
+
 // 发布帖子（带图片上传）
 export const publishPost = (formData) => {
   return apiClient.post('/publish_post.php', formData, {

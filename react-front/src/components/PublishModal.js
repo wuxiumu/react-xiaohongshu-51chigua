@@ -169,35 +169,38 @@ function PublishModal({ isOpen, onClose, onPublish }) {
           {/* 作者信息 */}
           <div className="form-group author-section">
             <div className="anonymous-option">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                />
-                <span>匿名发布</span>
-              </label>
+              <span className="anonymous-label-text">匿名发布</span>
+              <div
+                className={`anonymous-switch ${isAnonymous ? 'on' : 'off'}`}
+                onClick={() => setIsAnonymous(!isAnonymous)}
+              >
+                <div className="anonymous-switch-thumb" />
+              </div>
+            </div>
+
+            <div className="nickname-row">
+              <input
+                type="text"
+                placeholder={isAnonymous ? "匿名模式" : "你的昵称（可选）"}
+                value={username}
+                readOnly={isAnonymous}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`username-input ${isAnonymous ? 'username-readonly' : ''}`}
+              />
               {isAnonymous && (
-                <button 
+                <button
                   type="button"
-                  className="random-btn"
+                  className="random-nickname-btn"
                   onClick={generateRandomNickname}
                 >
-                  🎲 随机昵称
+                  🎲 换一个
                 </button>
               )}
             </div>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={isAnonymous ? "点击随机昵称按钮" : "你的昵称（可选）"}
-              className="username-input"
-            />
           </div>
           
           {/* 错误提示 */}
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message" dangerouslySetInnerHTML={{ __html: error }} />}
           
           {/* 提交按钮 */}
           <div className="form-actions">

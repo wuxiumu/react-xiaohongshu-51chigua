@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import './PostDetail.css';
-import { getPosts, getCommentList, addComment, getRandomNickname, likePost, sharePost, getRandomPosts } from '../api';
+import { getPosts, getCommentList, addComment, getRandomNickname, likePost, sharePost, getRandomPosts, getPostStats } from '../api';
 import ShareModal from './ShareModal';
 
 function PostDetail() {
@@ -125,9 +125,14 @@ function PostDetail() {
 
   const fetchPostStats = async () => {
     try {
-      // 使用已有的数据或从本地存储获取
-      const stats = { likeCount: 0, shareCount: 0, isLiked: false };
-      setPostStats(stats);
+      const response = await getPostStats(postId);
+      if (response.data.code === 0) {
+        setPostStats({
+          likeCount: response.data.like_count || 0,
+          shareCount: response.data.share_count || 0,
+          isLiked: response.data.is_liked || false
+        });
+      }
     } catch (err) {
       console.error('获取帖子统计失败:', err);
     }
@@ -257,7 +262,13 @@ function PostDetail() {
 
   const handleShare = async () => {
     try {
-      await sharePost(postId);
+      const response = await sharePost(postId);
+      if (response.data.code === 0) {
+        setPostStats(prev => ({
+          ...prev,
+          shareCount: response.data.count || prev.shareCount + 1
+        }));
+      }
     } catch (err) {
       console.error('转发计数失败:', err);
     }

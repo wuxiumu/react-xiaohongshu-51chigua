@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './WaterfallList.css';
 import { getPosts, likePost, sharePost, getPostStats, getSiteStats, getYulu } from '../api';
+
+const PAGE_SIZE = 12;
 
 function WaterfallList() {
   const navigate = useNavigate();
@@ -12,11 +14,14 @@ function WaterfallList() {
   const [postStats, setPostStats] = useState({});
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [activeTab, setActiveTab] = useState('all');
+  const [page, setPage] = useState(1);
   const [siteStats, setSiteStats] = useState({ posts: 0, comments: 0, totalUsers: 0, todayUsers: 0 });
   const [displayStats, setDisplayStats] = useState({ posts: 0, comments: 0, totalUsers: 0, todayUsers: 0 });
   const [allQuotes, setAllQuotes] = useState([]);
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
+  const [quoteAnimating, setQuoteAnimating] = useState(false);
+  const contentRef = useRef(null);
 
   // 获取所有语录
   useEffect(() => {
@@ -55,6 +60,13 @@ function WaterfallList() {
     };
   }, [allQuotes, quoteIndex]);
 
+  // 语录切换时触发按钮旋转动画
+  useEffect(() => {
+    setQuoteAnimating(true);
+    const timer = setTimeout(() => setQuoteAnimating(false), 600);
+    return () => clearTimeout(timer);
+  }, [quoteIndex]);
+
   // 根据路由设置默认tab
   useEffect(() => {
     if (location.pathname === '/hot') {
@@ -67,13 +79,6 @@ function WaterfallList() {
   useEffect(() => {
     fetchPosts();
   }, []);
-
-  // 获取所有帖子的统计数据
-  useEffect(() => {
-    if (posts.length > 0) {
-      fetchAllPostStats();
-    }
-  }, [posts]);
 
   const fetchPosts = async () => {
     try {
@@ -135,64 +140,75 @@ function WaterfallList() {
     requestAnimationFrame(animate);
   }, [siteStats.posts, siteStats.comments, siteStats.totalUsers, siteStats.todayUsers]);
 
-  const fetchAllPostStats = async () => {
-    const stats = {};
-    const liked = new Set();
-
-    const results = await Promise.allSettled(
-      posts.slice(0, 30).map(post => getPostStats(post.id))
-    );
-
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled' && result.value.data.code === 0) {
-        const { post_id, like_count, share_count, comment_count, is_liked } = result.value.data;
-        stats[post_id] = {
-          likeCount: like_count,
-          shareCount: share_count,
-          commentCount: comment_count
-        };
-        if (is_liked) {
-          liked.add(post_id);
-        }
-      } else if (result.status === 'rejected') {
-        const post = posts.slice(0, 30)[index];
-        console.error(`获取帖子${post?.id}统计数据失败:`, result.reason);
-      }
-    });
-
-    setPostStats(stats);
-    setLikedPosts(liked);
-  };
-
   // 计算热度分数
   const calculateHotScore = (post) => {
     const stats = postStats[post.id] || { likeCount: 0, shareCount: 0, commentCount: 0 };
-    // 热度算法：点赞*1 + 评论*2 + 分享*3
     return stats.likeCount * 1 + stats.commentCount * 2 + stats.shareCount * 3;
   };
 
   // 排序后的帖子列表
   const sortedPosts = React.useMemo(() => {
     let sorted = [...posts];
-    
+
     switch (activeTab) {
       case 'hot':
-        // 按热度排序
         sorted.sort((a, b) => calculateHotScore(b) - calculateHotScore(a));
         break;
       case 'latest':
-        // 按时间排序（最新的在前）
         sorted.sort((a, b) => new Date(b.create_time) - new Date(a.create_time));
         break;
       case 'all':
       default:
-        // 默认按创建时间排序
         sorted.sort((a, b) => new Date(b.create_time) - new Date(a.create_time));
         break;
     }
-    
+
     return sorted;
   }, [posts, activeTab, postStats]);
+
+  // 分页数据
+  const totalPages = Math.ceil(sortedPosts.length / PAGE_SIZE);
+  const paginatedPosts = sortedPosts.slice(0, page * PAGE_SIZE);
+
+  // 获取当前页帖子的统计数据（增量加载）
+  useEffect(() => {
+    if (paginatedPosts.length === 0) return;
+
+    const toFetch = paginatedPosts.filter(p => !postStats[p.id]);
+    if (toFetch.length === 0) return;
+
+    const fetchStats = async () => {
+      const results = await Promise.allSettled(
+        toFetch.map(post => getPostStats(post.id))
+      );
+
+      const newStats = { ...postStats };
+      const newLiked = new Set(likedPosts);
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value.data.code === 0) {
+          const { post_id, like_count, share_count, comment_count, is_liked } = result.value.data;
+          newStats[post_id] = {
+            likeCount: like_count,
+            shareCount: share_count,
+            commentCount: comment_count
+          };
+          if (is_liked) {
+            newLiked.add(post_id);
+          }
+        }
+      });
+
+      setPostStats(newStats);
+      setLikedPosts(newLiked);
+    };
+
+    fetchStats();
+  }, [paginatedPosts]);
+
+  // 切换tab时重置页码并滚动到内容区
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
 
   const handleLike = async (e, postId) => {
     e.stopPropagation();
@@ -257,10 +273,17 @@ function WaterfallList() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    setPage(1);
     if (tab === 'hot') {
       navigate('/hot');
     } else {
       navigate('/');
+    }
+  };
+
+  const loadMore = () => {
+    if (page < totalPages) {
+      setPage(prev => prev + 1);
     }
   };
 
@@ -320,7 +343,13 @@ function WaterfallList() {
           {typedText && (
             <div className="daily-quote">
               <p className="quote-text">{typedText}</p>
-              <span className="typing-cursor">|</span>
+              <button
+                className={`quote-refresh-btn${quoteAnimating ? ' rotating' : ''}`}
+                onClick={() => setQuoteIndex(prev => prev + 1)}
+                title="换一条语录"
+              >
+                &#x21bb;
+              </button>
             </div>
           )}
         </div>
@@ -356,7 +385,7 @@ function WaterfallList() {
         </div>
 
         <div className="waterfall-grid">
-          {sortedPosts.map((post, index) => {
+          {paginatedPosts.map((post, index) => {
             const stats = postStats[post.id] || { likeCount: 0, shareCount: 0, commentCount: 0 };
             const isLiked = likedPosts.has(post.id);
             const hotScore = calculateHotScore(post);
@@ -414,14 +443,29 @@ function WaterfallList() {
                   <div className="card-footer">
                     <span className="card-author">{post.username || '管理员'}</span>
                     <span className="card-time">{post.create_time.split(' ')[0]}</span>
-                    <span className="card-index">#{index + 1}</span>
+                    <span className="card-index">#{(page - 1) * PAGE_SIZE + index + 1}</span>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-        
+
+        {/* 分页控制 */}
+        {sortedPosts.length > 0 && (
+          <div className="pagination">
+            <span className="pagination-info">
+              {paginatedPosts.length} / {sortedPosts.length} 条
+              {page < totalPages && ` · 第 ${page}/${totalPages} 页`}
+            </span>
+            {page < totalPages && (
+              <button className="load-more-btn" onClick={loadMore}>
+                加载更多 ({(totalPages - page) * PAGE_SIZE} 条剩余)
+              </button>
+            )}
+          </div>
+        )}
+
         {sortedPosts.length === 0 && (
           <div className="no-results">
             <p>没有找到相关内容</p>
