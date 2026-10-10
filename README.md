@@ -114,21 +114,43 @@ react-xiaohongshu-51chigua/
 
 ## 快速开始
 
-```bash
-# 1. 启动 PHP 服务（项目根目录）
-cd php-api && php -S localhost:8000
+前端在 `react-front`，接口在 `php-api`。开发时 React 把以 `/php-api` 开头的请求代理到 `http://localhost:8000`（见 `react-front/package.json` 的 `proxy`）。PHP 内置服务器要从**仓库根目录**启动，才能同时提供 `php-api/` 和 `data/`。
 
-# 2. 启动 React 开发服务
-cd react-front && npm install && npm start
+```bash
+# 0. 环境变量。只提交 .env.example，不要提交填好的 .env
+cp .env.example .env
+# 编辑 .env：把 ADMIN_PASSWORD、JWT_SECRET 换成你自己的值
+
+# 1. 仓库根目录启动 PHP API（不要先 cd php-api）
+php -S localhost:8000 scripts/dev-router.php
+
+# 2. 另开终端，安装并启动 React 前端
+cd react-front
+npm install
+npm start
 
 # 3. 浏览器打开 http://localhost:3000
+#    接口示例：http://localhost:8000/php-api/get_posts.php
 ```
+
+管理员账号只存在于 `.env` 或进程环境变量中。未配置时无法登录，页面上也不再展示默认口令。发布达到上限时仍使用商务邮箱 `chigua517@outlook.com`（可用 `CONTACT_EMAIL` 覆盖）。
+
+### 冒烟检查
+
+```bash
+./scripts/smoke.sh
+```
+
+脚本会确认仓库里没有默认口令，从仓库根目录拉起 PHP，请求 `php-api` 的帖子、统计、语录和热词接口，并确认 `.env` 不会被内置服务器直接下载。
 
 ### 构建部署
 
 ```bash
-cd react-front && npm run build
-# 产物在 dist/ 目录，直接部署到任意 Web 服务器
+cd react-front
+npm install
+npm run build
+# 产物在仓库根目录 dist/（前端构建结果，以及复制进去的 php-api 与 data）
+# 把 .env 放在网站根目录、与 php-api 同级，且不要放到 Git 里
 ```
 
 ---

@@ -14,8 +14,8 @@ header("Access-Control-Allow-Headers: Content-Type");
 require_once 'helper.php';
 require_once 'config.php';
 
-// 管理员邮箱
-$adminEmail = 'chigua517@outlook.com';
+// 商务联系邮箱（公开联系方式，可通过 CONTACT_EMAIL 覆盖）
+$adminEmail = env_value('CONTACT_EMAIL', 'chigua517@outlook.com');
 
 // 发布限制配置
 define('MAX_TOTAL_POSTS', 200);        // 全站最多帖子数

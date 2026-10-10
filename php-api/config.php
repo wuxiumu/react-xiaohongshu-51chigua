@@ -1,8 +1,11 @@
 <?php
 /**
  * 环境配置文件
- * 根据部署环境修改此文件
+ * 密钥与管理员账号从环境变量或仓库根目录 .env 读取，见 .env.example。
  */
+
+require_once __DIR__ . '/env.php';
+load_project_env();
 
 // 设置 PHP 上传限制（必须在其他代码之前）
 ini_set('upload_max_filesize', '20M');
@@ -11,11 +14,11 @@ ini_set('max_execution_time', '300');
 ini_set('max_input_time', '300');
 ini_set('memory_limit', '256M');
 
-// 数据库配置（目前使用文件存储，预留配置）
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'xiaohongshu');
+// 数据库配置（目前使用文件存储，仅预留；不要在此写入口令）
+define('DB_HOST', env_value('DB_HOST', 'localhost'));
+define('DB_USER', env_value('DB_USER', ''));
+define('DB_PASS', env_value('DB_PASS', ''));
+define('DB_NAME', env_value('DB_NAME', ''));
 
 // 上传配置（注意：这里的值要小于等于上面的 ini_set 值）
 define('UPLOAD_MAX_SIZE', 15 * 1024 * 1024); // 15MB，留一些余量

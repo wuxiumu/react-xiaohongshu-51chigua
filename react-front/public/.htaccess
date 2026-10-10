@@ -1,6 +1,16 @@
 # Apache 重写规则
 # 用于支持 React Router 的前端路由
 
+# 禁止下载环境变量文件
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /

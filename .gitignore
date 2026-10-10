@@ -4,3 +4,6 @@
 data/comments
 data/posts
 dist/
+.env
+.env.*
+!.env.example

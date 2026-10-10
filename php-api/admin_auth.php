@@ -1,22 +1,33 @@
 <?php
 /**
- * 管理员配置
- * 默认管理员账号
+ * 管理员认证。
+ * 账号、密码与 JWT 密钥只从环境变量读取，仓库中不保存可用口令。
  */
 
-// 默认管理员账号（建议部署后修改）
-define('ADMIN_USERNAME', 'admin');
-define('ADMIN_PASSWORD', 'admin123');
-define('ADMIN_NICKNAME', '超级管理员');
+require_once __DIR__ . '/env.php';
+load_project_env();
 
-// JWT 密钥（用于生成登录令牌，部署时请务必修改）
-define('JWT_SECRET', 'your-secret-key-change-this-in-production');
-define('JWT_EXPIRE', 86400); // 24小时有效期
+define('ADMIN_USERNAME', env_value('ADMIN_USERNAME', ''));
+define('ADMIN_PASSWORD', env_value('ADMIN_PASSWORD', ''));
+define('ADMIN_NICKNAME', env_value('ADMIN_NICKNAME', '超级管理员'));
+define('JWT_SECRET', env_value('JWT_SECRET', ''));
+define('JWT_EXPIRE', (int) env_value('JWT_EXPIRE', '86400'));
+
+function admin_auth_configured() {
+    return ADMIN_USERNAME !== ''
+        && !is_placeholder_secret(ADMIN_PASSWORD)
+        && !is_placeholder_secret(JWT_SECRET)
+        && strlen(JWT_SECRET) >= 16;
+}
 
 /**
  * 生成 JWT Token
  */
 function generateToken($data) {
+    if (!admin_auth_configured()) {
+        return '';
+    }
+
     $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
     $time = time();
     $payload = json_encode([
@@ -41,6 +52,9 @@ function generateToken($data) {
  * 验证 JWT Token
  */
 function verifyToken($token) {
+    if (!admin_auth_configured()) {
+        return ['valid' => false, 'msg' => '管理员账号未配置'];
+    }
     if (empty($token)) {
         return ['valid' => false, 'msg' => '未登录'];
     }
@@ -79,7 +93,10 @@ function verifyToken($token) {
  * 验证管理员登录
  */
 function verifyAdminLogin($username, $password) {
-    if ($username === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
+    if (!admin_auth_configured()) {
+        return ['success' => false, 'msg' => '管理员账号未配置'];
+    }
+    if (hash_equals(ADMIN_USERNAME, (string) $username) && hash_equals(ADMIN_PASSWORD, (string) $password)) {
         return [
             'success' => true,
             'username' => $username,
