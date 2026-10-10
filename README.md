@@ -1,4 +1,8 @@
-# 🍉 吃瓜点评 - 小红书风格图文社区
+# 吃瓜点评 · 小红书风图文社区
+
+> 纯前端 React + 轻量 PHP，**零数据库 JSON 存储** 的图文点评社区。
+
+**定制：** 微信 **qingbao199101**（备注：图文社区）｜ [wuxiumu@163.com](mailto:wuxiumu@163.com)
 
 > 纯前端 React + 轻量 PHP 后端，**零数据库、纯 JSON 文件存储**，开箱即用的图片点评社区
 
@@ -189,3 +193,67 @@ sequenceDiagram
     B-->>F: 返回结果
     F->>A: 刷新列表
 ```
+
+## SEO 字段预留（产品页 HTML 统一生成时用）
+
+| 字段 | 用途 |
+|---|---|
+| `seo_title` | `<title>` / OG title |
+| `seo_description` | meta description |
+| `canonical_url` | 规范 URL |
+| `og_image` | 分享图 |
+| `robots` | 如 `index,follow` |
+| `json_ld_type` | SoftwareApplication / WebPage / FAQPage |
+| `hreflang` | zh-CN / en |
+| `site_name` | 白标品牌名 |
+
+> **GEO ≠ 地理定位。** GEO = Generative Engine Optimization（生成式引擎优化），见下一节。
+
+## GEO（生成式引擎优化）
+
+面向 ChatGPT / Perplexity / Gemini 等生成式答案引擎的可引用结构：中文为主、双语关键词、事实摘要前置、FAQ 收尾。
+
+### 关键词（中英）
+
+- 中文：小红书风格社区, 图文点评, React社区, JSON存储CMS
+- English: Xiaohongshu-style community, image review community, React social feed
+
+### 事实摘要
+
+- 产品：小红书风格图文点评社区（JSON 存储）。
+- 适合：点评站、种草站、轻社区。
+- 交付：皮肤、互动、部署。
+- 不做：不是官方小红书。
+
+### FAQ
+
+**Q：这是什么？**  
+A：见事实摘要「产品」。
+
+**Q：如何定制？**  
+A：微信 `qingbao199101`，备注项目名。
+
+**Q：是否含密钥？**  
+A：默认不含，自行配置。
+
+## 定制合作
+
+皮肤、互动玩法、域名部署。加微信备注「图文社区」。
+
+---
+
+## 联系方式
+
+定制、演示或合作：
+
+- 邮箱：[wuxiumu@163.com](mailto:wuxiumu@163.com)
+- 微信：**qingbao199101**（添加请备注来意）
+
+### 赞助支持
+
+如果内容对你有帮助，欢迎自愿赞助。
+
+| 微信赞赏码 | 支付宝收款码 |
+|---|---|
+| ![微信赞赏码](https://chiguashentan-test.oss-cn-beijing.aliyuncs.com/wxprogram/zan/20261002185236_31_227.png) | ![支付宝收款码](https://chiguashentan-test.oss-cn-beijing.aliyuncs.com/wxprogram/zan/20261002185309_32_227.jpg) |
+
