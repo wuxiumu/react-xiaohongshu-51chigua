@@ -4,6 +4,15 @@
 
 **定制：** 微信 **qingbao199101**（备注：图文社区）｜ [wuxiumu@163.com](mailto:wuxiumu@163.com)
 
+## 与代码对齐
+
+| 路径 | 说明 |
+|---|---|
+| `react-front/` | React 19 + react-router-dom + axios（CRA 风格） |
+| `php-api/` | 原生 PHP 接口（无框架） |
+| `data/` | JSON / 图片 / 词库文件存储（零数据库） |
+| `deploy.sh` / `DEPLOY.md` | 部署脚本与说明 |
+
 > 纯前端 React + 轻量 PHP 后端，**零数据库、纯 JSON 文件存储**，开箱即用的图片点评社区
 
 ---
@@ -220,7 +229,7 @@ sequenceDiagram
 
 ### 事实摘要
 
-- 产品：小红书风格图文点评社区（JSON 存储）。
+- 产品：小红书风图文点评社区（`react-front` + `php-api` + `data/` JSON/文件存储）。
 - 适合：点评站、种草站、轻社区。
 - 交付：皮肤、互动、部署。
 - 不做：不是官方小红书。
