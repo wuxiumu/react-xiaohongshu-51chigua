@@ -84,6 +84,11 @@ server {
     root /var/www/html;
     index index.html index.php;
 
+    # 禁止下载环境变量文件
+    location ~ /\.(env|git) {
+        deny all;
+    }
+
     # PHP 处理
     location ~ \.php$ {
         fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
@@ -192,9 +197,11 @@ chown -R www-data:www-data data/
 - **详情页**: http://your-domain.com/post/帖子ID
 - **API**: http://your-domain.com/php-api/xxx.php
 
-## 📝 环境变量（可选）
+## 📝 环境变量
 
-创建 `data/config.json`：
+管理员口令与 JWT 密钥放在网站根目录的 `.env`（与 `php-api` 同级），模板见仓库里的 `.env.example`。不要把填好的 `.env` 提交到 Git，部署脚本也不会复制它。`ADMIN_PASSWORD` 与 `JWT_SECRET` 必须换成部署环境自己的值，示例占位符无法登录。
+
+站点展示项仍可选用 `data/config.json`：
 
 ```json
 {

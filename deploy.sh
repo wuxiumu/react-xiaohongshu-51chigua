@@ -76,6 +76,11 @@ server {
     root /path/to/dist;
     index index.html index.php;
 
+    # 禁止下载环境变量文件
+    location ~ /\.(env|git) {
+        deny all;
+    }
+
     # PHP 处理
     location ~ \.php$ {
         fastcgi_pass 127.0.0.1:9000;
@@ -160,5 +165,8 @@ echo "   cd dist && docker-compose up -d"
 echo ""
 echo "4. PHP 内置服务器（开发测试）："
 echo "   cd dist && php -S 0.0.0.0:8000"
+echo ""
+echo "管理员口令在网站根目录 .env（与 php-api 同级），模板为仓库 .env.example。"
+echo "部署脚本不会复制 .env。"
 echo ""
 echo -e "${GREEN}完成！${NC}"

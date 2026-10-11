@@ -36,6 +36,10 @@ $tokenData = [
     'nickname' => $nickname ?: $result['nickname']
 ];
 $token = generateToken($tokenData);
+if ($token === '') {
+    echo json_encode(['code'=>1, 'msg'=>'管理员账号未配置'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // 返回登录成功信息
 echo json_encode([

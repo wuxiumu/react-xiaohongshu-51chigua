@@ -111,11 +111,6 @@ function AdminLogin() {
               />
             </div>
 
-            <div className="login-hint">
-              <p>默认账号: <strong>admin</strong></p>
-              <p>默认密码: <strong>admin123</strong></p>
-            </div>
-
             <button
               type="submit"
               className="admin-login-btn"
